@@ -24,6 +24,7 @@ your yours yourself yourselves
 ll re ve                    
 """.split())
 
+# belongs in scraper.py (will move)
 TRAPWORDS = ['grape', '/events/', 'intranet']
 
 # Assignment 1 tokenizer (im not sure if anyone want to use their's, 
@@ -68,7 +69,7 @@ class Stats:
             if url in self.unique_urls:
                 return
             self.unique_urls.add(url)
-            if len(tokens)>self.longest_page_url:
+            if len(tokens)>self.longest_page_words:
                 self.longest_page_words=len(tokens)
                 self.longest_page_url=url
             for word in tokens:
@@ -100,7 +101,8 @@ class Stats:
 
     def is_empty(self, url):
         pass
-    
+
+    # README and Section 5 forbid use of requests.head() against the live server (might delete)
     def too_large(self, url):
         response = requests.head(url, timeout=3, allow_redirects=True)
         length = response.headers.get('Content-Length')
