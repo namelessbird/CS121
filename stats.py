@@ -77,11 +77,26 @@ class Stats:
             host = (urlparse(url).hostname or "").lower()
             if host.endswith(".uci.edu") or host == "uci.edu":
                 self.subdomain_pages.setdefault(host,set()).add(url)
-        
+            self.pages_added += 1
+            if self.pages_added % 25 == 0:
+                self.save()
 
     def save(self):
         with self.lock:
-            pass
+            data = {
+                "unique_url_count": len(self.unique_urls),
+                "longest_page": {
+                    "url": self.longest_page_url,
+                    "word_count": self.longest_page_words,
+                },
+                "top_50_words": self.word_counts.most_common(50),
+                "subdomains": [
+                    [host, len(urls)]
+                    for host, urls in sorted(self.subdomain_pages.items())
+                ],
+            }
+            with open(self.save_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
 
     def is_empty(self, url):
         pass
@@ -94,5 +109,4 @@ class Stats:
             return True
         return False
 
-
-STATS=Stats()
+STATS = Stats()
