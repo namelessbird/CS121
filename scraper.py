@@ -1,7 +1,7 @@
 import re
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, urldefrag
 from bs4 import BeautifulSoup
-from stats import Stats, tokenize
+from stats import STATS, tokenize
 
 ALLOWED_DOMAINS = (
     "ics.uci.edu",
@@ -27,15 +27,27 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
-    links = list()
-    if(resp.status == 200 and resp.raw_response):
-        soup = BeautifulSoup(resp.raw_response.content, 'lxml')
-    for anchor in soup.find_all('a', href=True):
-        link = anchor.get('href')
+    if resp.status != 200 or not resp.raw_response:
+        return []
+    soup = BeautifulSoup(resp.raw_response.content, "lxml")
+    for tag in soup(["script", "style", "noscript", "template"]):
+        tag.decompose()
+    text = soup.get_text(separator=" ", strip=True)
+    tokens = tokenize(text)
+    final_url, _ = urldefrag(resp.url or url)
+    STATS.record_page(final_url, tokens)
+    if len(tokens) >= MIN_WORDS_PER_PAGE:
+        text_hash = hashlib.md5(" ".join(tokens).encode("utf-8", "ignore")).hexdigest()
+        if STATS.is_duplicate(text_hash):
+            return []
+        STATS.mark_seen(text_hash)
+    links = []
+    for anchor in soup.find_all("a", href=True):
+        link = anchor.get("href")
         fullURL = urljoin(resp.url, link)
         parsed = urlparse(fullURL)
         notFragmentLink = parsed._replace(fragment="").geturl()
-        links.add(notFragmentLink)
+        links.append(notFragmentLink)
     return links
 
 def is_valid(url):
