@@ -22,12 +22,9 @@ your yours yourself yourselves
 ll re ve                    
 """.split())
 
-# belongs in scraper.py (will move)
-TRAPWORDS = ['grape', '/events/', 'intranet']
-
 # Assignment 1 tokenizer (im not sure if anyone want to use their's, 
 # we can replace later)
-def tokenize (text):
+def tokenize(text):
     tokens = []
     current = ""
     for ch in text:
@@ -44,15 +41,15 @@ def tokenize (text):
 class Stats:
     def __init__(self, save_path="crawl_stats.json"):
         
-        self.lock=threading.RLock()
-        self.save_path=save_path
-        self.unique_urls=set()
-        self.longest_page_url=""
-        self.longest_page_words=0
-        self.word_counts=Counter()
-        self.subdomain_pages={}
-        self.seen_text_hashes=set()
-        self.pages_added=0
+        self.lock = threading.RLock()
+        self.save_path = save_path
+        self.unique_urls = set()
+        self.longest_page_url = ""
+        self.longest_page_words = 0
+        self.word_counts = Counter()
+        self.subdomain_pages = {}
+        self.seen_text_hashes = set()
+        self.pages_added = 0
 
     def is_duplicate(self, text_hash):
         with self.lock:
