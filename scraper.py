@@ -1,3 +1,4 @@
+import hashlib
 import re
 from urllib.parse import urlparse, urljoin, urldefrag, parse_qsl
 from bs4 import BeautifulSoup
