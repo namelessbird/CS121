@@ -3,6 +3,23 @@ ABOUT
 This is the base implementation of a full crawler that uses a spacetime
 cache server to receive requests.
 
+To run test practice:
+1. python launch.py --restart                             
+                ↓                                                    
+2. Wait 30-60 min, watch for issues                       
+                ↓                                                    
+3. Press Ctrl+C to stop the crawler                       
+                ↓                                                    
+4. Open Logs/Worker.log → look for trap patterns          
+                ↓                                                    
+5. If you find a new trap → add rule to scraper.py        
+                ↓                                                    
+6. Go back to step 1 (--restart starts fresh)             
+                                                             
+   When the log looks "clean" (mostly real content URLs)     
+   → you're done with the test period.
+                                           
+
 CONFIGURATION
 -------------------------
 
