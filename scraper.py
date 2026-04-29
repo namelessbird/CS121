@@ -52,21 +52,24 @@ BAD_QUERY_PARAMS = frozenset({
     "tribe-bar-date", "eventdate",
 })
 
+_EVENTS_PATH = re.compile(r"(^|/)events(/|$)", re.IGNORECASE)
+
 def _is_trap(hostname, path, query):
     h = (hostname or "").lower()
     pl = (path or "/").lower()
     ql = (query or "").lower()
-    if h == "grape.ics.uci.edu" and "/wiki/public/timeline" in pl:
+    if h == "grape.ics.uci.edu":
         return True
-    if h == "isg.ics.uci.edu" and "/events/tag" in pl:
+    if h == "wics.ics.uci.edu":
+        return True
+    if _EVENTS_PATH.search(pl):
         return True
     if h == "wiki.ics.uci.edu" and "idx=" in ql:
         return True
     if h == "flamingo.ics.uci.edu" and query and ("c=" in ql or "o=" in ql):
         return True
-    if h == "wics.ics.uci.edu" and "/events/category/" in pl:
-        return True
     return False
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
