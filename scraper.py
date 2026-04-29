@@ -10,6 +10,7 @@ ALLOWED_DOMAINS = (
     "stat.uci.edu",
 )
 
+MAX_PAGE_SIZE = 8 * 1024 * 1024
 MIN_WORDS_PER_PAGE = 50
 
 BAD_EXTENSIONS = re.compile(
@@ -61,7 +62,19 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
+    if 300 <= resp.status < 400:
+        headers = getattr(resp.raw_response, "headers", None) or {}
+        location = headers.get("Location") or headers.get("location")
+        if not location:
+            return []
+        target, _ = urldefrag(urljoin(url, location.strip()))
+        return [target] if target else []
+
     if resp.status != 200 or not resp.raw_response:
+        return []
+    if not resp.raw_response.content:
+        return []
+    if len(resp.raw_response.content) > MAX_PAGE_SIZE:
         return []
     soup = BeautifulSoup(resp.raw_response.content, "lxml")
     for tag in soup(["script", "style", "noscript", "template"]):
