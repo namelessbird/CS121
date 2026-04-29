@@ -64,6 +64,8 @@ def _is_trap(hostname, path, query):
         return True
     if h == "flamingo.ics.uci.edu" and query and ("c=" in ql or "o=" in ql):
         return True
+    if h == "wics.ics.uci.edu" and "/events/category/" in pl:
+        return True
     return False
 
 def scraper(url, resp):
