@@ -52,6 +52,20 @@ BAD_QUERY_PARAMS = frozenset({
     "tribe-bar-date", "eventdate",
 })
 
+def _is_trap(hostname, path, query):
+    h = (hostname or "").lower()
+    pl = (path or "/").lower()
+    ql = (query or "").lower()
+    if h == "grape.ics.uci.edu" and "/wiki/public/timeline" in pl:
+        return True
+    if h == "isg.ics.uci.edu" and "/events/tag" in pl:
+        return True
+    if h == "wiki.ics.uci.edu" and "idx=" in ql:
+        return True
+    if h == "flamingo.ics.uci.edu" and query and ("c=" in ql or "o=" in ql):
+        return True
+    return False
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
@@ -128,6 +142,8 @@ def is_valid(url):
     if BAD_EXTENSIONS.match(path):
         return False
     if BAD_PATHS.search(path):
+        return False
+    if _is_trap(parsed.hostname, path, parsed.query):
         return False
     parts = [s for s in path.split("/") if s]              
     if len(parts) > MAX_PATH_DEPTH:                       
