@@ -2,8 +2,6 @@ import json
 import threading
 from collections import Counter
 from urllib.parse import urlparse
-from bs4 import BeautifulSoup
-import requests
 
 # English stopword list
 STOPWORDS = frozenset("""
@@ -99,16 +97,5 @@ class Stats:
             with open(self.save_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-    def is_empty(self, url):
-        pass
-
-    # README and Section 5 forbid use of requests.head() against the live server (might delete)
-    def too_large(self, url):
-        response = requests.head(url, timeout=3, allow_redirects=True)
-        length = response.headers.get('Content-Length')
-        size = int(length) / (1024**2) #size in mb
-        if size > 50:
-            return True
-        return False
 
 STATS = Stats()
