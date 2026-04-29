@@ -101,9 +101,12 @@ def extract_next_links(url, resp):
     links = []
     for anchor in soup.find_all("a", href=True):
         link = anchor.get("href")
-        fullURL = urljoin(resp.url, link)
-        parsed = urlparse(fullURL)
-        notFragmentLink = parsed._replace(fragment="").geturl()
+        try:
+            fullURL = urljoin(resp.url, link)
+            parsed = urlparse(fullURL)
+            notFragmentLink = parsed._replace(fragment="").geturl()
+        except ValueError:
+            continue
         links.append(notFragmentLink)
     return links
 
