@@ -33,6 +33,7 @@ BAD_EXTENSIONS = re.compile(
     re.IGNORECASE,
 )
 
+# Maybe more trap fragments: /grape, /events, /intranet
 BAD_PATHS = re.compile(
     r"(?:/wp-(?:login|admin|json)|/login|/signup|/signin|/logout|/register"
     r"|/share|/sharer|/replytocom|/feed|/atom|/rss"
@@ -80,7 +81,10 @@ def extract_next_links(url, resp):
         return []
     if len(resp.raw_response.content) > MAX_PAGE_SIZE:
         return []
-    soup = BeautifulSoup(resp.raw_response.content, "lxml")
+    try:
+        soup = BeautifulSoup(resp.raw_response.content, "lxml")
+    except Exception:
+        soup = BeautifulSoup(resp.raw_response.content, "html.parser")
     for tag in soup(["script", "style", "noscript", "template"]):
         tag.decompose()
     text = soup.get_text(separator=" ", strip=True)
