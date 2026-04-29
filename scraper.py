@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse, urljoin, urldefrag
+from urllib.parse import urlparse, urljoin, urldefrag, parse_qsl
 from bs4 import BeautifulSoup
 from stats import STATS, tokenize
 
@@ -69,6 +69,8 @@ def extract_next_links(url, resp):
     text = soup.get_text(separator=" ", strip=True)
     tokens = tokenize(text)
     final_url, _ = urldefrag(resp.url or url)
+    if not _in_scope(final_url):
+        return []
     STATS.record_page(final_url, tokens)
     if len(tokens) >= MIN_WORDS_PER_PAGE:
         text_hash = hashlib.md5(" ".join(tokens).encode("utf-8", "ignore")).hexdigest()
@@ -90,18 +92,27 @@ def is_valid(url):
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]):
+    except ValueError:
+        return False
+    if parsed.scheme not in ("http", "https"):
+        return False
+    if not _in_scope(url):
+        return False
+    path = parsed.path or "/"
+    if BAD_EXTENSIONS.match(path):
+        return False
+    if BAD_PATHS.search(path):
+        return False
+    if parsed.query:
+        try:
+            params = parse_qsl(parsed.query, keep_blank_values=True)
+        except ValueError:
             return False
-        return not re.match(
-            r".*\.(css|js|bmp|gif|jpe?g|ico"
-            + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
-            + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
-            + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+        for key, _ in params:
+            if key.lower() in BAD_QUERY_PARAMS:
+                return False
+    return True
 
-    except TypeError:
-        print ("TypeError for ", parsed)
-        raise
+def _in_scope(url):
+    host = (urlparse(url).hostname or "").lower()
+    return any(host == d or host.endswith("." + d) for d in ALLOWED_DOMAINS)
