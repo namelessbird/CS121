@@ -10,6 +10,9 @@ ALLOWED_DOMAINS = (
     "stat.uci.edu",
 )
 
+MAX_URL_LENGTH = 300
+MAX_PATH_DEPTH = 10
+MAX_QUERY_PARAMS = 6
 MAX_PAGE_SIZE = 8 * 1024 * 1024
 MIN_WORDS_PER_PAGE = 50
 
@@ -111,15 +114,22 @@ def is_valid(url):
         return False
     if not _in_scope(url):
         return False
+    if len(url) > MAX_URL_LENGTH:                          
+        return False
     path = parsed.path or "/"
     if BAD_EXTENSIONS.match(path):
         return False
     if BAD_PATHS.search(path):
         return False
+    parts = [s for s in path.split("/") if s]              
+    if len(parts) > MAX_PATH_DEPTH:                       
+        return False
     if parsed.query:
         try:
             params = parse_qsl(parsed.query, keep_blank_values=True)
         except ValueError:
+            return False
+        if len(params) > MAX_QUERY_PARAMS:                 
             return False
         for key, _ in params:
             if key.lower() in BAD_QUERY_PARAMS:
