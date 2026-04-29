@@ -58,9 +58,9 @@ def _is_trap(hostname, path, query):
     h = (hostname or "").lower()
     pl = (path or "/").lower()
     ql = (query or "").lower()
-    if h == "grape.ics.uci.edu":
+    if "doku.php" in pl:
         return True
-    if h == "wics.ics.uci.edu":
+    if h == "grape.ics.uci.edu":
         return True
     if _EVENTS_PATH.search(pl):
         return True
