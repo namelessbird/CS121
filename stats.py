@@ -81,6 +81,7 @@ class Stats:
         with self.lock:
             data = {
                 "unique_url_count": len(self.unique_urls),
+                "unique_subdomain_count": len(self.subdomain_pages),
                 "longest_page": {
                     "url": self.longest_page_url,
                     "word_count": self.longest_page_words,
