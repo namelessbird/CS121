@@ -50,6 +50,7 @@ BAD_QUERY_PARAMS = frozenset({
     "phpsessid", "sid", "session",
     "filter", "sort_by", "orderby",
     "tribe-bar-date", "eventdate",
+    "skin", "subpage",
 })
 
 _EVENTS_PATH = re.compile(r"(^|/)events(/|$)", re.IGNORECASE)
@@ -67,6 +68,8 @@ def _is_trap(hostname, path, query):
     if h == "wiki.ics.uci.edu" and "idx=" in ql:
         return True
     if h == "flamingo.ics.uci.edu" and query and ("c=" in ql or "o=" in ql):
+        return True
+    if "baldig/learning" in pl or "/supplement/" in pl:
         return True
     return False
 
