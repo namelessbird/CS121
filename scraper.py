@@ -63,12 +63,7 @@ def _is_trap(hostname, path, query):
         return True
     if h == "grape.ics.uci.edu":
         return True
-    if _EVENTS_PATH.search(pl) and (
-        re.search(r"/(19|20)\d{2}/", pl) or  
-        "tribe-bar-date" in ql or
-        "eventdate" in ql or
-        "ical" in ql
-    ):
+    if _EVENTS_PATH.search(pl):
         return True
     if h == "wiki.ics.uci.edu" and "idx=" in ql:
         return True
