@@ -63,7 +63,12 @@ def _is_trap(hostname, path, query):
         return True
     if h == "grape.ics.uci.edu":
         return True
-    if _EVENTS_PATH.search(pl):
+    if _EVENTS_PATH.search(pl) and (
+        re.search(r"/(19|20)\d{2}/", pl) or  
+        "tribe-bar-date" in ql or
+        "eventdate" in ql or
+        "ical" in ql
+    ):
         return True
     if h == "wiki.ics.uci.edu" and "idx=" in ql:
         return True
@@ -72,7 +77,6 @@ def _is_trap(hostname, path, query):
     if "baldig/learning" in pl or "/supplement/" in pl:
         return True
     return False
-
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
