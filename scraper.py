@@ -28,7 +28,7 @@ BAD_EXTENSIONS = re.compile(
     r"|exe|msi|bin|apk|dll|jar|war|class"
     r"|bz2|tar|gz|tgz|7z|rar|zip|lz|lzma|xz"
     r"|psd|ai|dmg|iso|epub|cnf|sha1|sha256|md5|asc|sig"
-    r"|woff2?|ttf|otf|eot|sql|sqlite|db|ipynb|mat|fig|nb"
+    r"|woff2?|ttf|otf|eot|sql|sqlite|db|ipynb|mat|fig|nb|pdb|txt"
     r")$",
     re.IGNORECASE,
 )
@@ -59,8 +59,6 @@ def _is_trap(hostname, path, query):
     h = (hostname or "").lower()
     pl = (path or "/").lower()
     ql = (query or "").lower()
-    if "doku.php" in pl:
-        return True
     if h == "grape.ics.uci.edu":
         return True
     if _EVENTS_PATH.search(pl):
@@ -102,10 +100,18 @@ def extract_next_links(url, resp):
         return []
     if len(resp.raw_response.content) > MAX_PAGE_SIZE:
         return []
+    content = resp.raw_response.content
+    markup = content
+    if content.startswith((b"\xff\xfe", b"\xfe\xff")):
+        markup = content.decode("utf-16", errors="replace")
+    else:
+        sample = content[: min(10000, len(content))]
+        if sample.count(b"\x00") / max(len(sample), 1) > 0.25:
+            markup = content.decode("utf-16-le", errors="replace")
     try:
-        soup = BeautifulSoup(resp.raw_response.content, "lxml")
+        soup = BeautifulSoup(markup, "lxml")
     except Exception:
-        soup = BeautifulSoup(resp.raw_response.content, "html.parser")
+        soup = BeautifulSoup(markup, "html.parser")
     for tag in soup(["script", "style", "noscript", "template"]):
         tag.decompose()
     text = soup.get_text(separator=" ", strip=True)
