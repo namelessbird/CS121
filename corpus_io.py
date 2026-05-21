@@ -86,3 +86,29 @@ def write_doc_ids(out, pages):
         for doc_id, page in pages:
             line = str(doc_id) + "\t" + page["url"] + "\n"
             fh.write(line)
+
+# Read doc_ids.txt. Returns a list: urls[doc_id] is that page's URL
+def read_urls(index_dir):
+    path = os.path.join(str(index_dir), "doc_ids.txt")
+    urls = []
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.rstrip("\r\n")
+            if line == "":
+                continue
+            parts = line.split("\t", 1)
+            doc_id = int(parts[0])
+            url = parts[1] if len(parts) > 1 else ""
+            while len(urls) <= doc_id:
+                urls.append("")
+            urls[doc_id] = url
+    return urls
+
+# URL for this doc id, or None.
+def get_url(urls, doc_id):
+    if doc_id < 0 or doc_id >= len(urls):
+        return None
+    u = urls[doc_id]
+    if u == "":
+        return None
+    return u
