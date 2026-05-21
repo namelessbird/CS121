@@ -99,17 +99,21 @@ def mergeAllPartials(partialsFolder, indexPath):
 # Read index.txt and write lexicon.txt (return unique term count).
 def writeLexicon(indexPath, lexiconPath):
     nTerms = 0
-    offset = 0
-    indexFile = open(indexPath, "r", encoding="utf-8")
+    indexFile = open(indexPath, "rb")
     lexFile = open(lexiconPath, "w", encoding="utf-8")
 
-    for line in indexFile:
-        term, body = splitLine(line)
-        if term == "":
+    while True:
+        start_byte = indexFile.tell()
+        raw_bytes = indexFile.readline()
+        if raw_bytes == b"":
+            break
+
+        line = raw_bytes.decode("utf-8", errors="replace").rstrip("\r\n")
+        if line == "" or "\t" not in line:
             continue
-        lineBytes = len(line.encode("utf-8"))
-        lexFile.write(term + "\t" + str(offset) + "\n")
-        offset = offset + lineBytes
+        
+        term = line.split("\t", 1)[0]
+        lexFile.write(term + "\t" + str(start_byte) + "\n")
         nTerms = nTerms + 1
 
     indexFile.close()
@@ -157,4 +161,3 @@ def finishIndex(outputDir, nDocuments, corpus="", partialsFolder=None):
     print("Total index size (KB):", indexKb)
 
     return stats
-  
