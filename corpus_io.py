@@ -82,26 +82,28 @@ def write_doc_ids(out, pages):
  
     out_path = os.path.join(str(out), "doc_ids.txt")
 
-    with open(out_path, "w", encoding="utf-8") as fh:
-        for doc_id, page in pages:
-            line = str(doc_id) + "\t" + page["url"] + "\n"
-            fh.write(line)
+    fh = open(out_path, "w", encoding="utf-8")
+    for doc_id, page in pages:
+        line = str(doc_id) + "\t" + page["url"] + "\n"
+        fh.write(line)
+    fh.close()
 
 # Read doc_ids.txt. Returns a list: urls[doc_id] is that page's URL
 def read_urls(index_dir):
     path = os.path.join(str(index_dir), "doc_ids.txt")
     urls = []
-    with open(path, encoding="utf-8") as fh:
-        for line in fh:
-            line = line.rstrip("\r\n")
-            if line == "":
-                continue
-            parts = line.split("\t", 1)
-            doc_id = int(parts[0])
-            url = parts[1] if len(parts) > 1 else ""
-            while len(urls) <= doc_id:
-                urls.append("")
-            urls[doc_id] = url
+    fh = open(path, encoding="utf-8")
+    for line in fh:
+        line = line.rstrip("\r\n")
+        if line == "":
+            continue
+        parts = line.split("\t", 1)
+        doc_id = int(parts[0])
+        url = parts[1] if len(parts) > 1 else ""
+        while len(urls) <= doc_id:
+            urls.append("")
+        urls[doc_id] = url
+    fh.close()
     return urls
 
 # URL for this doc id, or None.
