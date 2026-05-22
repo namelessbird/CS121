@@ -85,3 +85,6 @@ def main():
         if low == "quit" or low == "exit" or low == "q":
             break
         run_query(lex, index_path, urls, line)
+
+if __name__ == "__main__":
+    main()
