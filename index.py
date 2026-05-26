@@ -1,24 +1,20 @@
 import os
-from collections import Counter
-from nltk.stem import PorterStemmer
-from parse_document import Parse
+
+from parse_document import weighted_counts
 from postings import Postings
 
-stemmer = PorterStemmer()
-
-# Save RAM to disk
 def writePartialFile(index, partialsFolder, partialNum, paths):
     if len(index) == 0:
         return index, partialNum, paths
 
-    # zfill(4) pads the number( 0 -> "0000")
     fileNum = str(partialNum).zfill(4)
     path = os.path.join(partialsFolder, "partial_" + fileNum + ".txt")
-    with open(path, "w", encoding="utf-8") as f:
-        for term in sorted(index.keys()):
-            posts = index[term]
-            line = term + "\t" + ",".join(str(p.docid) + ":" + str(p.frequency) for p in posts)
-            f.write(line + "\n")
+    f = open(path, "w", encoding="utf-8")
+    for term in sorted(index.keys()):
+        posts = index[term]
+        line = term + "\t" + ",".join(str(p.docid) + ":" + str(p.frequency) for p in posts)
+        f.write(line + "\n")
+    f.close()
 
     paths.append(path)
     return {}, partialNum + 1, paths
@@ -29,17 +25,18 @@ def buildIndex(documents):
 
     for document in documents:
         docNum = docNum + 1
-        tokens = Parse(document)
-        stemmedTokens = [stemmer.stem(t.lower()) for t in tokens] 
+        counts = weighted_counts(document)
 
-        counts = Counter(stemmedTokens)
         for token, freq in counts.items():
-            tempPost = Postings(docNum, freq)
-
+            freq_i = int(freq)
+            if freq_i < 1:
+                freq_i = 1
+            tempPost = Postings(docNum, freq_i)
             if token not in index:
                 index[token] = [tempPost]
             else:
                 index[token].append(tempPost)
+
     return index
 
 def buildPartialIndex(documents, partialsFolder, docsPerPartial=5000):
@@ -50,19 +47,25 @@ def buildPartialIndex(documents, partialsFolder, docsPerPartial=5000):
     partialNum = 0
     paths = []
     docNum = -1
+    sumlengths = 0
 
     for document in documents:
         docNum = docNum + 1
-        tokens = Parse(document)
-        stemmedTokens = [stemmer.stem(t.lower()) for t in tokens]
-        counts = Counter(stemmedTokens)
+        counts = weighted_counts(document)
 
+        doc_len = 0
         for token, freq in counts.items():
-            tempPost = Postings(docNum, freq)
+            freq_i = int(freq)
+            if freq_i < 1:
+                freq_i = 1
+            doc_len = doc_len + freq_i
+            tempPost = Postings(docNum, freq_i)
             if token not in index:
                 index[token] = [tempPost]
             else:
                 index[token].append(tempPost)
+
+        sumlengths = sumlengths + doc_len
 
         nDocs = nDocs + 1
         if nDocs >= docsPerPartial:
@@ -73,4 +76,4 @@ def buildPartialIndex(documents, partialsFolder, docsPerPartial=5000):
             print("  ... indexed", docNum + 1, "documents (partial files so far:", len(paths), ")")
 
     index, partialNum, paths = writePartialFile(index, partialsFolder, partialNum, paths)
-    return paths
+    return paths, sumlengths
