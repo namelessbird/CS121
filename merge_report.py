@@ -111,7 +111,7 @@ def writeLexicon(indexPath, lexiconPath):
         line = raw_bytes.decode("utf-8", errors="replace").rstrip("\r\n")
         if line == "" or "\t" not in line:
             continue
-        
+
         term = line.split("\t", 1)[0]
         lexFile.write(term + "\t" + str(start_byte) + "\n")
         nTerms = nTerms + 1
@@ -121,7 +121,7 @@ def writeLexicon(indexPath, lexiconPath):
     return nTerms
 
 # Finish the index by merging partial files and writing stats.json.
-def finishIndex(outputDir, nDocuments, corpus="", partialsFolder=None):
+def finishIndex(outputDir, nDocuments, corpus="", partialsFolder=None, avglength=None):
     os.makedirs(outputDir, exist_ok=True)
     indexPath = os.path.join(outputDir, "index.txt")
     lexiconPath = os.path.join(outputDir, "lexicon.txt")
@@ -153,11 +153,15 @@ def finishIndex(outputDir, nDocuments, corpus="", partialsFolder=None):
         "n_unique_terms": nTerms,
         "index_total_kb": indexKb,
     }
+    if avglength is not None:
+        stats["avglen"] = round(float(avglength), 4)
     statsPath = os.path.join(outputDir, "stats.json")
     statsFile = open(statsPath, "w", encoding="utf-8")
     json.dump(stats, statsFile, indent=2)
     statsFile.close()
     print("Wrote", statsPath)
     print("Total index size (KB):", indexKb)
+    if "avglen" in stats:
+        print("avglen (for ranking):", stats["avglen"])
 
     return stats
