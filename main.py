@@ -1,5 +1,3 @@
-# Way to run everything together
-# Later: add parse, buildIndex, merge in this file
 import argparse
 import os
 import sys
@@ -56,7 +54,7 @@ def main():
     partialsFolder = os.path.join(args.output, "partials")
     print("Building partial index files in:", partialsFolder)
     print("(one partial file every", args.docs_per_partial, "pages)")
-    partialPaths = buildPartialIndex(
+    partialPaths, sumlengths = buildPartialIndex(
         documents,
         partialsFolder,
         docsPerPartial=args.docs_per_partial,
@@ -67,13 +65,19 @@ def main():
             "Developer spec wants >= 3 partial files on full corpus.",
             "Use a smaller --docs-per-partial if you only see 1 or 2 files.",
         )
-        
+
+    n_pages = len(pages)
+    avglength = 0.0
+    if n_pages > 0:
+        avglength = sumlengths / n_pages
+
     # Merging partial files
     finishIndex(
         args.output,
         nDocuments=len(pages),
         corpus=os.path.normpath(args.corpus),
         partialsFolder=partialsFolder,
+        avglength=avglength,
     )
 
 if __name__ == "__main__":
