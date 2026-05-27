@@ -7,7 +7,12 @@ from corpus_io import get_url, read_urls
 from index_reader import line_for_term, read_lexicon
 from parse_document import stem_query
 from postings import parse_line
-from query import idf, intersect_many, ranked_pairs
+from query import idf, intersect_many, penalty, ranked_pairs
+
+def sort_key(row):
+    sc = row[0]
+    doc_id = row[1]
+    return (-sc, doc_id)
 
 def read_stats(index_dir):
     path = os.path.join(str(index_dir), "stats.json")
@@ -58,18 +63,39 @@ def run_query(lex, index_path, urls, text, n_docs):
 
     t0 = time.perf_counter()
     ordered = ranked_pairs(matched, tf_maps, idfs)
-    ms = (time.perf_counter() - t0) * 1000.0
-
-    show = ordered[: min(5, len(ordered))]
-    n_show = len(show)
-
-    print("Found " + str(len(matched)) + " doc(s). Top " + str(n_show) + " URLs: (" + str(round(ms, 1)) + " ms)")
-
-    for j in range(len(show)):
-        sc, doc_id = show[j]
+    scored = []
+    for j in range(len(ordered)):
+        sc = ordered[j][0]
+        doc_id = ordered[j][1]
         url = get_url(urls, doc_id)
         if url is None:
             url = "(no url)"
+        s = sc * penalty(url)
+        scored.append((s, doc_id, url))
+    scored.sort(key=sort_key)
+
+    top = []
+    seen_urls = {}
+    for j in range(len(scored)):
+        sc = scored[j][0]
+        doc_id = scored[j][1]
+        url = scored[j][2]
+        if url in seen_urls:
+            continue
+        seen_urls[url] = 1
+        top.append((sc, doc_id, url))
+        if len(top) >= 5:
+            break
+
+    ms = (time.perf_counter() - t0) * 1000.0
+
+    n_show = len(top)
+
+    print("Found " + str(len(matched)) + " doc(s). Top " + str(n_show) + " URLs: (" + str(round(ms, 1)) + " ms)")
+
+    for j in range(len(top)):
+        sc = top[j][0]
+        url = top[j][2]
         print("[" + str(round(sc, 4)) + "] " + url)
 
 
