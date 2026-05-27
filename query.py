@@ -68,3 +68,18 @@ def ranked_pairs(matched, tf_maps, idfs):
         rows.append((sc, doc_id))
     rows.sort(key=row_sort_key)
     return rows
+
+# Small penalty for wordlist or pages so they cannot top the list
+def penalty(url):
+    if url is None or url == "":
+        return 1.0
+    low = url.lower()
+    if "wordlist" in low:
+        return 0.2
+    if "dictionary" in low:
+        return 0.2
+    if "/words.txt" in low:
+        return 0.2
+    if "/words/" in low:
+        return 0.2
+    return 1.0
