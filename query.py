@@ -36,7 +36,7 @@ def idf(N, df):
         df = 1
     if N < 1:
         N = 1
-    return math.log((N - df + 0.5) / (df + 0.5) + 1.0)
+    return math.log(N / df)
 
 def score_doc(tf_maps, idfs, doc_id, n_terms):
     s = 0.0
